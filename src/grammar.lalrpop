@@ -1,0 +1,60 @@
+use crate::tokens::Token;
+use crate::lexer::LexicalError;
+use crate::ast;
+use crate::ast::Span;
+
+grammar<'input>;
+
+extern {
+  type Location = usize;
+  type Error = LexicalError;
+
+  enum Token<'input> {
+    // keywords
+    "true" => Token::True,
+    "false" => Token::False,
+    ":" => Token::Colon,
+    "," => Token::Comma,
+    "null" => Token::Null,
+    "{" => Token::LeftBrace,
+    "}" => Token::RightBrace,
+    "[" => Token::LeftBracket,
+    "]" => Token::RightBracket,
+    "number" => Token::Number(<&'input str>),
+    "string" => Token::String(<&'input str>),
+  }
+}
+
+Comma<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+pub Value: ast::Value<'input> = {
+    <lo:@L> <value:"string"> <hi:@R> => ast::Value::String(value, Span::new(lo, hi)),
+    <lo:@L> <value:"number"> <hi:@R> => ast::Value::Number(value, Span::new(lo, hi)),
+    <value:Array> => ast::Value::Array(value),
+    <value:Object> => ast::Value::Object(value),
+    <lo:@L> <value:"true"> <hi:@R> => ast::Value::Bool(true, Span::new(lo, hi)),
+    <lo:@L> <value:"false"> <hi:@R> => ast::Value::Bool(false, Span::new(lo, hi)),
+    <lo:@L> <value:"null"> <hi:@R> => ast::Value::Null(Span::new(lo, hi)),
+}
+
+pub Array: ast::Array<'input> = {
+    <lo:@L> "[" <values:Comma<Value>> "]" <hi:@R> => ast::Array {
+        values,
+        span: Span::new(lo, hi)
+    }
+}
+
+pub Object: ast::Object<'input> = {
+    <lo:@L> "{" <values:Comma<(<"string"> ":" <Value>)>> "}" <hi:@R> => ast::Object {
+        values: values.into_iter().map(|x| (x.0, x.1)).collect(),
+        span: Span::new(lo, hi),
+    }
+}
