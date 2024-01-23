@@ -43,5 +43,12 @@ mod test {
     #[test]
     fn test_value() {
         parse_value(r#"{ "hello": "world", "a": [2, "s"] }"#).unwrap();
+        parse_value(
+            r#"{
+            "hello": "world",
+            "array": ["first", 2, true, false, null, { "more": 2 }]
+        }"#,
+        )
+        .unwrap();
     }
 }

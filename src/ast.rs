@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-
 #[derive(Debug, Clone, Copy)]
 pub struct Span {
     pub lo: usize,
@@ -9,9 +8,7 @@ pub struct Span {
 
 impl Span {
     pub fn new(lo: usize, hi: usize) -> Self {
-        Self {
-            lo, hi
-        }
+        Self { lo, hi }
     }
 }
 
